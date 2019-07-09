@@ -6,8 +6,11 @@ $params = array_merge(
     require __DIR__ . '/params-local.php'
 );
 
+$allowedIPs = [MY_IP];
+
 return [
     'id' => 'app-frontend',
+    'name' => 'Game',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'controllerNamespace' => 'frontend\controllers',
@@ -36,14 +39,25 @@ return [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        /*
+
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
+            'enableStrictParsing' => false,
             'rules' => [
+                '/' => 'site/index',
             ],
         ],
-        */
+
+    ],
+    'modules' => [
+        'gii' => [
+            'class' => 'yii\gii\Module',
+            'allowedIPs' => $allowedIPs,
+        ],
+    ],
+    'bootstrap' => [
+        'gii'
     ],
     'params' => $params,
 ];
