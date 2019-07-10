@@ -10,6 +10,8 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\LoginForm;
+use common\models\Present;
+use common\models\UserPresent;
 use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
@@ -74,11 +76,78 @@ class SiteController extends MyFrontController
      */
     public function actionIndex()
     {
-        if (Yii::$app->user->isGuest) {
+        if (Yii::$app->user->isGuest)
+        {
             return $this->goLogin();
         }
 
         return $this->render('index');
+    }
+
+    protected function randomMoney($limitMoney, $name)
+    {
+        if($limitMoney > 0)
+        {
+            $maxMoney = ($limitMoney*rand(1, 5))/100; //take a maximum of 5% of the total amount
+            if($maxMoney > 1)
+            {
+                if(is_float($maxMoney))
+                {
+                    $maxMoney = floor($maxMoney);
+                }
+                $this->present[$name] = rand(1, $maxMoney);
+            }
+        }
+        return $this->present;
+    }
+
+    protected function randomThing($things, $name)
+    {
+        if(is_array($things) && count($things) > 0)
+        {
+            $randomKey = array_rand($things,1);
+            $this->present[$name] = $things[$randomKey];
+        }
+        return $this->present;
+    }
+
+    protected function randomPoints($name)
+    {
+        $randomPoints = rand(1, 25);
+        $this->present[$name] = $randomPoints;
+
+        return $this->present;
+    }
+
+    public function actionStart()
+    {
+
+        if(Yii::$app->request->post('start'))
+        {
+            $presents = Present::find()->all();
+
+            if($presents && is_array($presents))
+            {
+                foreach($presents as $present)
+                {
+                    $limitOption = json_decode($present->limitOption);
+                    if($present->name == 'money')
+                    {
+                        $this->randomMoney($limitOption->limitMoney, $present->name);
+                    }elseif($present->name == 'thing')
+                    {
+                        $this->randomThing($limitOption->things, $present->name);
+                    }elseif($present->name == 'points')
+                    {
+                        $this->randomPoints($present->name);
+                    }
+                }
+            }
+            $randomPresentKey = array_rand($this->present,1);
+            echo json_encode(['type'=>$randomPresentKey, 'present'=>$this->present[$randomPresentKey]]);
+            exit;
+        }
+
     }
 
     /**

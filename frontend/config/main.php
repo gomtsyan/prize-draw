@@ -16,7 +16,7 @@ return [
     'controllerNamespace' => 'frontend\controllers',
     'components' => [
         'request' => [
-            'csrfParam' => '_csrf-frontend',
+            'csrfParam' => '_csrf_frontend',
         ],
         'user' => [
             'identityClass' => 'common\models\User',
@@ -45,6 +45,7 @@ return [
             'showScriptName' => false,
             'enableStrictParsing' => false,
             'rules' => [
+                '<controller:\w+>/<action:\w+>/' => '<controller>/<action>',
                 '/' => 'site/index',
             ],
         ],
