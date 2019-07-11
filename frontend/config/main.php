@@ -47,6 +47,8 @@ return [
             'rules' => [
                 '<controller:\w+>/<action:\w+>/' => '<controller>/<action>',
                 '/' => 'site/index',
+                'PUT /site/save_present' => 'site/save_present',
+                'POST /site/start' => 'site/start',
             ],
         ],
 

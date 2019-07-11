@@ -7,7 +7,7 @@ use \yii\web\Controller;
 class MyFrontController extends Controller
 {
 
-    public $coefficientMtoP = 0.2;
+    public $coefficientMtoP = 0.02;
 
     protected $present = array();
 
@@ -25,9 +25,9 @@ class MyFrontController extends Controller
 
         $points = $money * $this->coefficientMtoP;
 
-        $points = round($points, 2);
+        $points = round($points, 0);
 
-        $points = number_format($points, 2, '.', '');
+        $points = number_format($points, 0, '.', '');
 
         return $points;
     }

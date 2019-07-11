@@ -55,4 +55,9 @@ class UserPresent extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::className(), ['id' => 'userId']);
     }
+
+    public static function getByUserId($userId)
+    {
+        return  static::findOne(['userId' => $userId]);
+    }
 }

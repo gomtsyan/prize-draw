@@ -44,4 +44,17 @@ class Present extends \yii\db\ActiveRecord
             'limitOption' => 'Limit Option',
         ];
     }
+
+    public static function getIdByName($name)
+    {
+        $present = static::findOne(['name' => $name]);
+
+        return $present->id;
+    }
+
+    public static function getPresentByName($name)
+    {
+        return static::findOne(['name' => $name]);
+
+    }
 }

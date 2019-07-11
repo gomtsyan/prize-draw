@@ -6,7 +6,6 @@ use frontend\models\VerifyEmailForm;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
-use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\LoginForm;
@@ -84,7 +83,7 @@ class SiteController extends MyFrontController
         return $this->render('index');
     }
 
-    protected function randomMoney($limitMoney, $name)
+    protected function getRandomMoney($limitMoney, $name)
     {
         if($limitMoney > 0)
         {
@@ -101,27 +100,26 @@ class SiteController extends MyFrontController
         return $this->present;
     }
 
-    protected function randomThing($things, $name)
+    protected function getRandomThing($things, $name)
     {
         if(is_array($things) && count($things) > 0)
         {
             $randomKey = array_rand($things,1);
-            $this->present[$name] = $things[$randomKey];
+            //$this->present[$name] = $things[$randomKey];
         }
         return $this->present;
     }
 
-    protected function randomPoints($name)
+    protected function getRandomPoints($name)
     {
         $randomPoints = rand(1, 25);
-        $this->present[$name] = $randomPoints;
+        //$this->present[$name] = $randomPoints;
 
         return $this->present;
     }
 
     public function actionStart()
     {
-
         if(Yii::$app->request->post('start'))
         {
             $presents = Present::find()->all();
@@ -131,23 +129,193 @@ class SiteController extends MyFrontController
                 foreach($presents as $present)
                 {
                     $limitOption = json_decode($present->limitOption);
-                    if($present->name == 'money')
+                    switch ($present->name)
                     {
-                        $this->randomMoney($limitOption->limitMoney, $present->name);
-                    }elseif($present->name == 'thing')
-                    {
-                        $this->randomThing($limitOption->things, $present->name);
-                    }elseif($present->name == 'points')
-                    {
-                        $this->randomPoints($present->name);
+                        case 'money':
+                            if($limitOption->limitMoney && $present->name)
+                            {
+                                $this->getRandomMoney($limitOption->limitMoney, $present->name);
+                            }
+                            break;
+                        case 'thing':
+                            if($limitOption->items && $present->name)
+                            {
+                                $this->getRandomThing($limitOption->items, $present->name);
+                            }
+
+                            break;
+                        case 'points':
+                            if($present->name)
+                            {
+                                $this->getRandomPoints($present->name);
+                            }
+                            break;
                     }
                 }
             }
-            $randomPresentKey = array_rand($this->present,1);
-            echo json_encode(['type'=>$randomPresentKey, 'present'=>$this->present[$randomPresentKey]]);
+            if(!empty($this->present))
+            {
+                $randomPresentKey = array_rand($this->present,1);
+                echo json_encode(['type'=>$randomPresentKey, 'present'=>$this->present[$randomPresentKey]]);
+            }else{
+                echo json_encode(['status'=>'error']);
+            }
             exit;
         }
+    }
 
+    public function actionSave_present()
+    {
+        if(Yii::$app->request->post())
+        {
+            $userId = Yii::$app->request->post('userId');
+            $present = Yii::$app->request->post('present');
+            $presentName = Yii::$app->request->post('presentType');
+            $convertToPoints = Yii::$app->request->post('type');
+
+            if($convertToPoints)
+            {
+                $convertedPoints = $this->convertMoneyToPoints($present);
+                if($convertedPoints)
+                {
+                    $oldPresent = $present;
+                    $present = $convertedPoints;
+                    $presentName = 'points';
+                }
+            }
+
+            $presentId = Present::getIdByName($presentName);
+            $userPresent = UserPresent::getByUserId($userId);
+
+            if($userPresent)
+            {
+                if($userPresent->presents)
+                {
+                    $presents = json_decode($userPresent->presents);
+
+                    if(is_object($presents) || is_array($presents))
+                    {
+                        $issetPresentItem = false;
+
+                        foreach($presents as $idPresent => $presentItem)
+                        {
+                            if($idPresent == $presentId)
+                            {
+                                $issetPresentItem = true;
+                                if($presentName == 'thing')
+                                {
+                                    array_push($presentItem->items, $present);
+                                }else{
+                                    $presentItem->count += $present;
+                                }
+
+                            }
+                        }
+
+                        if(!$issetPresentItem)
+                        {
+                            $presents = (array) $presents;
+
+                            switch ($presentName)
+                            {
+                                case 'money':
+                                    $presents[$presentId] = ['isReceived'=>0, 'count'=>$present];
+                                    break;
+                                case 'points':
+                                    $presents[$presentId] = ['count'=>$present];
+                                    break;
+                                case 'thing':
+                                    $presents[$presentId] = ['isReceived'=>0, 'items'=>[$present]];
+                                    break;
+                            }
+                        }
+                    }
+
+                    $userPresent->presents = json_encode($presents);
+                }else{
+                    echo json_encode(['error'=>'Something went wrong']);
+                    exit;
+                }
+            }else{
+                $presents = array();
+                switch ($presentName)
+                {
+                    case 'money':
+                        $presents[$presentId] = ['isReceived'=>0, 'count'=>$present];
+                        break;
+                    case 'thing':
+                        $presents[$presentId] = ['isReceived'=>0, 'items'=>[$present]];
+                        break;
+                    case 'points':
+                        $presents[$presentId] = ['count'=>$present];
+                        break;
+                }
+                $userPresent = new UserPresent();
+                $userPresent->userId = $userId;
+                $userPresent->presents = json_encode($presents);
+            }
+
+            if ($userPresent->save())
+            {
+                if(isset($oldPresent) && $oldPresent)
+                {
+                    $presentName = 'money';
+                    $present = $oldPresent;
+                }
+
+                $presentObj = Present::getPresentByName($presentName);
+
+                if($presentObj && is_object($presentObj))
+                {
+                    if($presentObj->limitOption)
+                    {
+                        $limitOption = json_decode($presentObj->limitOption);
+
+                        if($limitOption && is_object($limitOption))
+                        {
+                            switch ($presentName)
+                            {
+                                case 'money':
+                                    if(isset($limitOption->limitMoney) && $limitOption->limitMoney)
+                                    {
+                                        $limitOption->limitMoney -= $present;
+                                    }
+                                    break;
+                                case 'thing':
+                                    if(isset($limitOption->items) && $limitOption->items)
+                                    {
+                                        if (($key = array_search($present, $limitOption->items)) !== false) {
+                                            unset($limitOption->items[$key]);
+                                        }
+                                    }
+                                    break;
+                            }
+
+                            $presentObj->limitOption = json_encode($limitOption);
+
+                            if($presentObj->save())
+                            {
+                                echo json_encode(['message'=>'Present successfully added']);
+                            }else
+                            {
+                                echo json_encode(['error'=>'Something went wrong']);
+                            }
+                        }else{
+                            echo json_encode(['error'=>'Something went wrong']);
+                        }
+                    }else{
+                        echo json_encode(['error'=>'Something went wrong']);
+                    }
+                }else
+                {
+                    echo json_encode(['error'=>'Something went wrong']);
+                }
+            }else
+            {
+                echo json_encode(['error'=>'Something went wrong']);
+            }
+            exit;
+        }
     }
 
     /**
