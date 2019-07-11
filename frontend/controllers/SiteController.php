@@ -105,7 +105,7 @@ class SiteController extends MyFrontController
         if(is_array($things) && count($things) > 0)
         {
             $randomKey = array_rand($things,1);
-            //$this->present[$name] = $things[$randomKey];
+            $this->present[$name] = $things[$randomKey];
         }
         return $this->present;
     }
@@ -113,7 +113,7 @@ class SiteController extends MyFrontController
     protected function getRandomPoints($name)
     {
         $randomPoints = rand(1, 25);
-        //$this->present[$name] = $randomPoints;
+        $this->present[$name] = $randomPoints;
 
         return $this->present;
     }
