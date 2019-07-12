@@ -60,4 +60,9 @@ class UserPresent extends \yii\db\ActiveRecord
     {
         return  static::findOne(['userId' => $userId]);
     }
+
+    public static function getPresents()
+    {
+        return  static::find()->all();
+    }
 }

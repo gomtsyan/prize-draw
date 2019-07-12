@@ -7,9 +7,6 @@ const cors = require('cors');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const keys = require('./config/keys');
-
-// app references
-
 const usersRouter = require('./routers/users-router');
 const userRouter = require('./routers/user-router');
 const middleware = require('./middleware/authMiddleware');
@@ -44,10 +41,8 @@ app.use(passport.initialize());
 // Passport config
 require('./config/passport')(passport);
 
+app.use('/api', usersRouter);
 app.use('/api', userRouter);
-app.use('/api', userRouter);
-app.get('/', middleware.checkToken, function(){console.log('asd')});
-
 
 // start server
 app.listen(PORT, function() {

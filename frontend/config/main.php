@@ -6,8 +6,6 @@ $params = array_merge(
     require __DIR__ . '/params-local.php'
 );
 
-$allowedIPs = [MY_IP];
-
 return [
     'id' => 'app-frontend',
     'name' => 'Game',
@@ -51,16 +49,6 @@ return [
                 'POST /site/start' => 'site/start',
             ],
         ],
-
-    ],
-    'modules' => [
-        'gii' => [
-            'class' => 'yii\gii\Module',
-            'allowedIPs' => $allowedIPs,
-        ],
-    ],
-    'bootstrap' => [
-        'gii'
     ],
     'params' => $params,
 ];

@@ -11,12 +11,6 @@ class MyFrontController extends Controller
 
     protected $present = array();
 
-    public function init()
-    {
-        //echo "<pre>"; var_dump($this); die;
-
-    }
-
     public function convertMoneyToPoints($money)
     {
         $points = 0;

@@ -1,7 +1,7 @@
 $( document ).ready(function()
 {
     const bankAPI = 'http://localhost:8000/api/user';
-    const JWTtoken = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkMjY1YzUxODIzYTkzNzk4OGVlZWYwOSIsIm5hbWUiOiJBcm1lbiIsImlhdCI6MTU2Mjc5NTMzMSwiZXhwIjoxNTk0MzUyMjU3fQ.2Fq0kGbSsjH9D5Ay3273m39fDsz5qpsBSpPCv_uiZ5k';
+    const bankLoginAPI = 'http://localhost:8000/api/users/login';
     const userEmail = $('#userEmail').attr('data-userEmail');
     const userId = $('#userId').attr('data-userId');
     const csrfToken = $('#csrfToken').attr('data-token');
@@ -94,15 +94,35 @@ $( document ).ready(function()
         var present = $('#'+presentType).attr('data-present');
 
         axios
-            .put(bankAPI, {email:userEmail, money:present}, {
-                headers: {'x-access-token' : JWTtoken}
-            })
+            .post(bankLoginAPI,
+                'email='+userEmail
+            )
             .then(function(res) {
-                console.log(res);
+
                 if(res.statusText === 'OK')
                 {
-                    var text = '<h2>Bank account received</h2>';
-                    $('#money').html(text);
+                    if(res.data.success)
+                    {
+                        axios
+                            .put(bankAPI, {email:userEmail, money:present}, {
+                                headers: {'x-access-token' : res.data.token}
+                            })
+                            .then(function(result) {
+                                console.log(result);
+                                if(result.statusText === 'OK')
+                                {
+                                    if(result.data.status === 'OK'){
+                                        var text = '<h2>Bank account received</h2>';
+                                        $('#money').html(text);
+                                    }
+
+                                }
+                            })
+                            .catch(function(err)
+                            {
+                                console.log(err);
+                            });
+                    }
                 }
             })
             .catch(function(err)

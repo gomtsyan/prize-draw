@@ -102,10 +102,23 @@ class SiteController extends MyFrontController
 
     protected function getRandomThing($things, $name)
     {
-        if(is_array($things) && count($things) > 0)
+
+        if((is_array($things) || is_object($things)) && count($things) > 0)
         {
-            $randomKey = array_rand($things,1);
-            $this->present[$name] = $things[$randomKey];
+            $element = false;
+            if(is_array($things))
+            {
+                $randomKey = array_rand($things,1);
+                $element = $things[$randomKey];
+            }
+            else if(is_object($things))
+            {
+                $thingsArray = array_values((array)$things);
+                $randomKey = array_rand($thingsArray,1);
+                $element = $thingsArray[$randomKey];
+            }
+
+            $this->present[$name] = $element;
         }
         return $this->present;
     }
@@ -129,6 +142,7 @@ class SiteController extends MyFrontController
                 foreach($presents as $present)
                 {
                     $limitOption = json_decode($present->limitOption);
+
                     switch ($present->name)
                     {
                         case 'money':
@@ -205,7 +219,9 @@ class SiteController extends MyFrontController
                                 if($presentName == 'thing')
                                 {
                                     array_push($presentItem->items, $present);
-                                }else{
+                                }
+                                else
+                                {
                                     $presentItem->count += $present;
                                 }
 
@@ -230,13 +246,23 @@ class SiteController extends MyFrontController
                             }
                         }
                     }
+                    else
+                    {
+                        echo json_encode(['error'=>'Something went wrong']);
+                        exit;
+                    }
 
                     $userPresent->presents = json_encode($presents);
-                }else{
+
+                }
+                else
+                {
                     echo json_encode(['error'=>'Something went wrong']);
                     exit;
                 }
-            }else{
+            }
+            else
+            {
                 $presents = array();
                 switch ($presentName)
                 {
@@ -257,60 +283,80 @@ class SiteController extends MyFrontController
 
             if ($userPresent->save())
             {
+
                 if(isset($oldPresent) && $oldPresent)
                 {
                     $presentName = 'money';
                     $present = $oldPresent;
                 }
 
-                $presentObj = Present::getPresentByName($presentName);
-
-                if($presentObj && is_object($presentObj))
+                if($presentName != 'points')
                 {
-                    if($presentObj->limitOption)
+                    $presentObj = Present::getPresentByName($presentName);
+
+                    if($presentObj && is_object($presentObj))
                     {
-                        $limitOption = json_decode($presentObj->limitOption);
-
-                        if($limitOption && is_object($limitOption))
+                        if($presentObj->limitOption)
                         {
-                            switch ($presentName)
+                            $limitOption = json_decode($presentObj->limitOption);
+
+                            if($limitOption && is_object($limitOption))
                             {
-                                case 'money':
-                                    if(isset($limitOption->limitMoney) && $limitOption->limitMoney)
-                                    {
-                                        $limitOption->limitMoney -= $present;
-                                    }
-                                    break;
-                                case 'thing':
-                                    if(isset($limitOption->items) && $limitOption->items)
-                                    {
-                                        if (($key = array_search($present, $limitOption->items)) !== false) {
-                                            unset($limitOption->items[$key]);
+                                switch ($presentName)
+                                {
+                                    case 'money':
+                                        if(isset($limitOption->limitMoney) && $limitOption->limitMoney)
+                                        {
+                                            $limitOption->limitMoney -= $present;
                                         }
-                                    }
-                                    break;
+                                        break;
+                                    case 'thing':
+                                        if(isset($limitOption->items) && $limitOption->items)
+                                        {
+                                            if(is_object($limitOption->items))
+                                            {
+                                                $limitOption->items = array_values((array)$limitOption->items);
+                                            }
+                                            if (($key = array_search($present, $limitOption->items)) !== false) {
+                                                unset($limitOption->items[$key]);
+                                                $limitOption->items = array_values($limitOption->items);
+                                            }
+                                        }
+                                        break;
+                                }
+
+                                $presentObj->limitOption = json_encode($limitOption);
+
+                                if($presentObj->save())
+                                {
+                                    echo json_encode(['message'=>'Present successfully added']);
+                                }
+                                else
+                                {
+                                    echo json_encode(['error'=>'Something went wrong']);
+                                }
                             }
-
-                            $presentObj->limitOption = json_encode($limitOption);
-
-                            if($presentObj->save())
-                            {
-                                echo json_encode(['message'=>'Present successfully added']);
-                            }else
+                            else
                             {
                                 echo json_encode(['error'=>'Something went wrong']);
                             }
-                        }else{
+                        }
+                        else
+                        {
                             echo json_encode(['error'=>'Something went wrong']);
                         }
-                    }else{
+                    }
+                    else
+                    {
                         echo json_encode(['error'=>'Something went wrong']);
                     }
-                }else
-                {
-                    echo json_encode(['error'=>'Something went wrong']);
                 }
-            }else
+                else
+                {
+                    echo json_encode(['message'=>'Present successfully added']);
+                }
+            }
+            else
             {
                 echo json_encode(['error'=>'Something went wrong']);
             }
@@ -336,7 +382,6 @@ class SiteController extends MyFrontController
 
             return $this->goBack();
         } else {
-
 
             $model->password = '';
 
