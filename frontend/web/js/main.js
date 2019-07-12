@@ -11,8 +11,6 @@ $( document ).ready(function()
         e.preventDefault();
         var start = true;
 
-        console.log(start);
-
         axios
             .post('/site/start', 'start='+start, {
                 headers: {'X-CSRF-Token' : csrfToken}
@@ -61,7 +59,7 @@ $( document ).ready(function()
         }
 
         axios
-        .put('/site/save_present',
+        .put('/site/save-present',
             data,
             {
                 headers: {'X-CSRF-Token' : csrfToken}

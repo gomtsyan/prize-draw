@@ -102,7 +102,6 @@ class SiteController extends MyFrontController
 
     protected function getRandomThing($things, $name)
     {
-
         if((is_array($things) || is_object($things)) && count($things) > 0)
         {
             $element = false;
@@ -178,7 +177,7 @@ class SiteController extends MyFrontController
         }
     }
 
-    public function actionSave_present()
+    public function actionSavePresent()
     {
         if(Yii::$app->request->post())
         {
@@ -283,7 +282,6 @@ class SiteController extends MyFrontController
 
             if ($userPresent->save())
             {
-
                 if(isset($oldPresent) && $oldPresent)
                 {
                     $presentName = 'money';
@@ -292,64 +290,7 @@ class SiteController extends MyFrontController
 
                 if($presentName != 'points')
                 {
-                    $presentObj = Present::getPresentByName($presentName);
-
-                    if($presentObj && is_object($presentObj))
-                    {
-                        if($presentObj->limitOption)
-                        {
-                            $limitOption = json_decode($presentObj->limitOption);
-
-                            if($limitOption && is_object($limitOption))
-                            {
-                                switch ($presentName)
-                                {
-                                    case 'money':
-                                        if(isset($limitOption->limitMoney) && $limitOption->limitMoney)
-                                        {
-                                            $limitOption->limitMoney -= $present;
-                                        }
-                                        break;
-                                    case 'thing':
-                                        if(isset($limitOption->items) && $limitOption->items)
-                                        {
-                                            if(is_object($limitOption->items))
-                                            {
-                                                $limitOption->items = array_values((array)$limitOption->items);
-                                            }
-                                            if (($key = array_search($present, $limitOption->items)) !== false) {
-                                                unset($limitOption->items[$key]);
-                                                $limitOption->items = array_values($limitOption->items);
-                                            }
-                                        }
-                                        break;
-                                }
-
-                                $presentObj->limitOption = json_encode($limitOption);
-
-                                if($presentObj->save())
-                                {
-                                    echo json_encode(['message'=>'Present successfully added']);
-                                }
-                                else
-                                {
-                                    echo json_encode(['error'=>'Something went wrong']);
-                                }
-                            }
-                            else
-                            {
-                                echo json_encode(['error'=>'Something went wrong']);
-                            }
-                        }
-                        else
-                        {
-                            echo json_encode(['error'=>'Something went wrong']);
-                        }
-                    }
-                    else
-                    {
-                        echo json_encode(['error'=>'Something went wrong']);
-                    }
+                    $this->deductAmount($presentName, $present);
                 }
                 else
                 {
@@ -362,6 +303,69 @@ class SiteController extends MyFrontController
             }
             exit;
         }
+    }
+
+    protected function deductAmount($presentName, $present)
+    {
+        $presentObj = Present::getPresentByName($presentName);
+
+        if($presentObj && is_object($presentObj))
+        {
+            if($presentObj->limitOption)
+            {
+                $limitOption = json_decode($presentObj->limitOption);
+
+                if($limitOption && is_object($limitOption))
+                {
+                    switch ($presentName)
+                    {
+                        case 'money':
+                            if(isset($limitOption->limitMoney) && $limitOption->limitMoney)
+                            {
+                                $limitOption->limitMoney -= $present;
+                            }
+                            break;
+                        case 'thing':
+                            if(isset($limitOption->items) && $limitOption->items)
+                            {
+                                if(is_object($limitOption->items))
+                                {
+                                    $limitOption->items = array_values((array)$limitOption->items);
+                                }
+                                if (($key = array_search($present, $limitOption->items)) !== false) {
+                                    unset($limitOption->items[$key]);
+                                    $limitOption->items = array_values($limitOption->items);
+                                }
+                            }
+                            break;
+                    }
+
+                    $presentObj->limitOption = json_encode($limitOption);
+
+                    if($presentObj->save())
+                    {
+                        echo json_encode(['message'=>'Present successfully added']);
+                    }
+                    else
+                    {
+                        echo json_encode(['error'=>'Something went wrong']);
+                    }
+                }
+                else
+                {
+                    echo json_encode(['error'=>'Something went wrong']);
+                }
+            }
+            else
+            {
+                echo json_encode(['error'=>'Something went wrong']);
+            }
+        }
+        else
+        {
+            echo json_encode(['error'=>'Something went wrong']);
+        }
+        exit;
     }
 
     /**
