@@ -28,9 +28,16 @@ for the server to work, it is necessary to register with the same email address 
 ```javascript
   http://localhost:8000/api/users/register
   ```
-###transmitted data
+### transmitted data
+
   * name
   * email
   * password
   * password_confirm
+  
+  ### To send money to the bank, you must run this console command with the quantity argument.
+  
+  ```javascript
+  php yii send-cash-to-bank/send [count]
+  ```
 

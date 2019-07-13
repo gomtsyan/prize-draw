@@ -31,5 +31,4 @@ class MyFrontController extends Controller
         return $this->redirect('/site/login');
     }
 
-
 }

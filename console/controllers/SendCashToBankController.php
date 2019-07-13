@@ -8,12 +8,12 @@ use yii\console\Controller;
 class SendCashToBankController extends Controller
 {
     protected $userIds = array();
+    protected $url = "http://localhost:8000/api/users/addMoney";
 
     public function actionSend($limit)
     {
         if(intval($limit)){
             $sendData = $this->getSendData();
-            $url = "http://localhost:8000/api/users/addMoney";
             $limit = intval($limit);
 
             if($sendData && is_array($sendData))
@@ -26,7 +26,7 @@ class SendCashToBankController extends Controller
                 {
                     $offset = ($i - 1)*$limit;
                     $currentSendData = array_slice($sendData, $offset, $limit);
-                    $this->sendCurl($url, json_encode($currentSendData));
+                    $this->sendCurl($this->url, json_encode($currentSendData));
                     $i++;
                 }
                 $this->deductUsersAmount();
