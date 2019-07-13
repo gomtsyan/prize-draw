@@ -61,8 +61,14 @@ class UserPresent extends \yii\db\ActiveRecord
         return  static::findOne(['userId' => $userId]);
     }
 
-    public static function getPresents()
+    public static function getUsersPresents()
     {
         return  static::find()->all();
     }
+
+    public static function getPresentsByUserIds($ids)
+    {
+        return  static::find()->where(['userId'=> $ids])->all();
+    }
+
 }

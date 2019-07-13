@@ -13,6 +13,7 @@ const validateUpdateManyInput = require('../validation/updateMany');
 
 // Load User model
 const User = require('../models/Users');
+const UsersMoney = require('../models/UsersMoney');
 
 
 
@@ -134,43 +135,27 @@ router.post('/users/login', function(req, res)  {
 });
 
 router.post('/users/addMoney', function(req, res)  {
-    // Form validation
-    var errors = validateUpdateManyInput(req.body).errors;
-    var isValid = validateUpdateManyInput(req.body).isValid;
-    // Check validation
-    if (!isValid) {
-        return res.status(400).json(errors);
-    }
 
-    const email = req.body.email;
-    var money = parseInt(req.body.money);
+    bulk = UsersMoney.collection.initializeOrderedBulkOp();
+    if(Array.isArray(req.body)){
+        req.body.forEach(function(item){
+            //bulk.find( { email: item.email } ).upsert().update( { $set: { money: item.money } });
+            bulk.find( { email: item.email } ).upsert().update( { $inc: {money : item.money } });
+        });
 
-    User.findOne({email: req.body.email})
-        .then(function(user) {
-            if (user) {
-                if(user.money) {
-                    money += parseInt(user.money);
-                }
-
-                User
-                    .update(
-                        {email: email},
-                        {
-                            $set: {
-                                money: money
-                            }
-                        }
-                    )
-                    .then(function() {return res.status(200).json({status: 'OK'})} )
-                    .catch(function(error) {
-                        response.status(500).send(error.message);
-                    });
-
-            } else {
-                return res.status(400).json({email: 'User not found'});
-
+        bulk.execute(function (error, result) {
+            if(result.ok){
+                res.status(200).json({
+                    success: true
+                });
+            }
+            if(error){
+                res.status(404).json({error: true});
             }
         });
+    }else{
+        res.status(404).json({error: true});
+    }
 });
 
 module.exports = router;

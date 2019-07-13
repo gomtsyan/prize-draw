@@ -223,7 +223,7 @@ class SiteController extends MyFrontController
                                 {
                                     $presentItem->count += $present;
                                 }
-
+                                $presentItem->isReceived = 0;
                             }
                         }
 
@@ -252,7 +252,6 @@ class SiteController extends MyFrontController
                     }
 
                     $userPresent->presents = json_encode($presents);
-
                 }
                 else
                 {
