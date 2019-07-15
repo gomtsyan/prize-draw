@@ -20,18 +20,33 @@ class SendCashToBankController extends Controller
             {
                 $totalCount = count($sendData);
                 $countOfSend = ceil($totalCount/$limit);
+                $responseMessage = array();
                 $offset = 0;
                 $i = 1;
                 while ($i <= $countOfSend)
                 {
                     $offset = ($i - 1)*$limit;
                     $currentSendData = array_slice($sendData, $offset, $limit);
-                    $this->sendCurl($this->url, json_encode($currentSendData));
+                    $response = json_decode($this->sendCurl($this->url, json_encode($currentSendData)));
+                    if(!$response->success)
+                    {
+                        $responseMessage['error'] = $response;
+                    }
                     $i++;
                 }
-                $this->deductUsersAmount();
+
+                if(empty($responseMessage['error']))
+                {
+                    $this->deductUsersAmount();
+                }
             }
-        }else{
+            else
+            {
+                echo "No new data to send";
+            }
+        }
+        else
+        {
             echo "Argument is not correct";
         }
     }

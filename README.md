@@ -1,8 +1,8 @@
 # Prize-draw README
 
-### init
+### Info
 
-After installing the project, you need to insert the initial data using the console command.
+After migrating and installing the project, you need to insert the initial data using the console command.
 
 
   ```javascript
@@ -28,7 +28,7 @@ for the server to work, it is necessary to register with the same email address 
 ```javascript
   http://localhost:8000/api/users/register
   ```
-### transmitted data
+### Transmitted data
 
   * name
   * email
